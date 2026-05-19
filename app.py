@@ -62,6 +62,8 @@ def get_yt_dlp_cmd():
     if FFMPEG_PATH != 'ffmpeg':
         ffmpeg_dir = str(Path(FFMPEG_PATH).parent)
         cmd.extend(['--ffmpeg-location', ffmpeg_dir])
+    # Bypass YouTube bot detection / sign-in blocks
+    cmd.extend(['--extractor-args', 'youtube:player-client=android,web'])
     return cmd
 
 
