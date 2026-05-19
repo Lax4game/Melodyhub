@@ -23,12 +23,9 @@ COPY . .
 # Tạo các thư mục lưu trữ tạm thời cần thiết
 RUN mkdir -p uploads downloads temp
 
-# Cấu hình biến môi trường
-ENV FLASK_ENV=production
-ENV PORT=5000
-
-# Mở cổng 5000
+# Mở cổng (Railway sẽ tự động liên kết)
 EXPOSE 5000
 
 # Chạy ứng dụng Flask bằng Gunicorn với thời gian timeout dài (10 phút) để phục vụ AI tách nhạc
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "4", "--timeout", "600", "app:app"]
+# Sử dụng shell form để tự động nhận diện biến môi trường $PORT do Railway cấp phát
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600 app:app
