@@ -1,0 +1,34 @@
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Editor / IDE configs
+.vscode/
+.idea/
+
+# Large binaries & downloaded files (CRITICAL: Do not upload these to GitHub)
+ffmpeg-master-latest-win64-gpl/
+ffmpeg/
+ffmpeg.exe
+ffprobe.exe
+uploads/*
+downloads/*
+temp/*
+
+# Temporary media test files
+*.mp3
+*.mp4
+*.webm
+*.wav
+*.m4a
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MelodyHub - Tải Video & Xử Lý Nhạc Chuyên Nghiệp</title>
+    <meta name="description" content="Tải video YouTube, TikTok, chuyển đổi định dạng nhạc và tách vocal/instrumental với AI Demucs">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-orb bg-orb-4"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <a href="#" class="logo" id="logo-link">
+                <div class="logo-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <span class="logo-text">Melody<span class="logo-accent">Hub</span></span>
+            </a>
+            <nav class="nav" id="main-nav">
+                <button class="nav-btn active" data-tab="youtube" id="nav-youtube">
+                    <i class="fab fa-youtube"></i>
+                    <span>YouTube</span>
+                </button>
+                <button class="nav-btn" data-tab="tiktok" id="nav-tiktok">
+                    <i class="fab fa-tiktok"></i>
+                    <span>TikTok</span>
+                </button>
+                <button class="nav-btn" data-tab="studio" id="nav-studio">
+                    <i class="fas fa-sliders"></i>
+                    <span>Audio Studio</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- ==================== YOUTUBE TAB ==================== -->
+            <section class="tab-content active" id="tab-youtube">
+                <div class="section-header">
+                    <div class="section-icon youtube-gradient">
+                        <i class="fab fa-youtube"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">YouTube Downloader</h1>
+                        <p class="section-desc">Tải video & nhạc từ YouTube với chất lượng cao nhất</p>
+                    </div>
+                </div>
+
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <input type="text" id="yt-url" class="url-input" placeholder="Dán link YouTube vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="yt-fetch-btn" onclick="fetchYouTubeInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- YouTube Result -->
+                <div class="result-card glass-card hidden" id="yt-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper">
+                            <img id="yt-thumbnail" src="" alt="Thumbnail">
+                            <div class="duration-badge" id="yt-duration">0:00</div>
+                        </div>
+                        <div class="video-info">
+                            <h2 class="video-title" id="yt-title">Video Title</h2>
+                            <div class="video-meta">
+                                <span id="yt-uploader"><i class="fas fa-user"></i> Channel</span>
+                                <span id="yt-views"><i class="fas fa-eye"></i> 0 views</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="download-options">
+                        <div class="option-group">
+                            <label class="option-label">Định dạng</label>
+                            <div class="format-selector">
+                                <button class="format-btn active" data-format="mp4" id="yt-format-mp4" onclick="selectYTFormat('mp4')">
+                                    <i class="fas fa-video"></i> MP4
+                                </button>
+                                <button class="format-btn" data-format="mp3" id="yt-format-mp3" onclick="selectYTFormat('mp3')">
+                                    <i class="fas fa-music"></i> MP3
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="option-group" id="yt-quality-group">
+                            <label class="option-label">Chất lượng</label>
+                            <div class="quality-grid" id="yt-quality-list">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+
+                        <button class="btn btn-download btn-glow" id="yt-download-btn" onclick="downloadYouTube()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải xuống</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-card glass-card hidden" id="yt-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="yt-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="yt-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="yt-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="yt-download-actions">
+                        <a class="btn btn-success" id="yt-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TIKTOK TAB ==================== -->
+            <section class="tab-content" id="tab-tiktok">
+                <div class="section-header">
+                    <div class="section-icon tiktok-gradient">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">TikTok Downloader</h1>
+                        <p class="section-desc">Tải video TikTok không watermark, chất lượng gốc</p>
+                    </div>
+                </div>
+
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <input type="text" id="tt-url" class="url-input" placeholder="Dán link TikTok vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="tt-fetch-btn" onclick="fetchTikTokInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TikTok Result -->
+                <div class="result-card glass-card hidden" id="tt-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper tiktok-thumb">
+                            <img id="tt-thumbnail" src="" alt="Thumbnail">
+                            <div class="duration-badge" id="tt-duration">0:00</div>
+                        </div>
+                        <div class="video-info">
+                            <h2 class="video-title" id="tt-title">Video Title</h2>
+                            <div class="video-meta">
+                                <span id="tt-uploader"><i class="fas fa-user"></i> Creator</span>
+                                <span id="tt-likes"><i class="fas fa-heart"></i> 0 likes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="download-options">
+                        <div class="option-group">
+                            <label class="option-label">Định dạng</label>
+                            <div class="format-selector">
+                                <button class="format-btn active" data-format="mp4" id="tt-format-mp4" onclick="selectTTFormat('mp4')">
+                                    <i class="fas fa-video"></i> MP4
+                                </button>
+                                <button class="format-btn" data-format="mp3" id="tt-format-mp3" onclick="selectTTFormat('mp3')">
+                                    <i class="fas fa-music"></i> MP3
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-download btn-glow" id="tt-download-btn" onclick="downloadTikTok()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải xuống</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-card glass-card hidden" id="tt-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="tt-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="tt-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="tt-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="tt-download-actions">
+                        <a class="btn btn-success" id="tt-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== AUDIO STUDIO TAB ==================== -->
+            <section class="tab-content" id="tab-studio">
+                <div class="section-header">
+                    <div class="section-icon studio-gradient">
+                        <i class="fas fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">Audio Studio</h1>
+                        <p class="section-desc">Chuyển đổi định dạng & Tách vocal/instrumental bằng AI</p>
+                    </div>
+                </div>
+
+                <!-- Sub-tabs for Studio -->
+                <div class="studio-tabs">
+                    <button class="studio-tab active" data-subtab="convert" id="studio-tab-convert" onclick="switchStudioTab('convert')">
+                        <i class="fas fa-exchange-alt"></i>
+                        Chuyển đổi định dạng
+                    </button>
+                    <button class="studio-tab" data-subtab="separate" id="studio-tab-separate" onclick="switchStudioTab('separate')">
+                        <i class="fas fa-layer-group"></i>
+                        Tách Vocal / Instrumental
+                    </button>
+                </div>
+
+                <!-- ===== CONVERT SUB-TAB ===== -->
+                <div class="studio-content active" id="subtab-convert">
+                    <div class="upload-zone glass-card" id="convert-upload-zone">
+                        <div class="upload-area" id="convert-drop-area">
+                            <input type="file" id="convert-file-input" accept="audio/*" hidden>
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3>Kéo thả file nhạc vào đây</h3>
+                            <p>hoặc <span class="upload-browse" onclick="document.getElementById('convert-file-input').click()">chọn file</span></p>
+                            <p class="upload-formats">Hỗ trợ: MP3, WAV, FLAC, OGG, AAC, AIFF, WMA, M4A</p>
+                        </div>
+                        <div class="file-preview hidden" id="convert-file-preview">
+                            <div class="file-icon"><i class="fas fa-file-audio"></i></div>
+                            <div class="file-details">
+                                <span class="file-name" id="convert-file-name">file.mp3</span>
+                                <span class="file-size" id="convert-file-size">0 MB</span>
+                            </div>
+                            <button class="btn-icon" onclick="removeConvertFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="convert-options glass-card hidden" id="convert-options">
+                        <div class="option-group">
+                            <label class="option-label">Chuyển đổi sang</label>
+                            <div class="format-grid">
+                                <button class="format-card active" data-fmt="wav" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-wave-square"></i></div>
+                                    <span class="format-card-name">WAV</span>
+                                    <span class="format-card-desc">Lossless</span>
+                                </button>
+                                <button class="format-card" data-fmt="flac" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-compact-disc"></i></div>
+                                    <span class="format-card-name">FLAC</span>
+                                    <span class="format-card-desc">Hi-Res</span>
+                                </button>
+                                <button class="format-card" data-fmt="mp3" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-music"></i></div>
+                                    <span class="format-card-name">MP3</span>
+                                    <span class="format-card-desc">Universal</span>
+                                </button>
+                                <button class="format-card" data-fmt="ogg" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-file-audio"></i></div>
+                                    <span class="format-card-name">OGG</span>
+                                    <span class="format-card-desc">Open Source</span>
+                                </button>
+                                <button class="format-card" data-fmt="aac" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-headphones"></i></div>
+                                    <span class="format-card-name">AAC</span>
+                                    <span class="format-card-desc">Apple</span>
+                                </button>
+                                <button class="format-card" data-fmt="aiff" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fas fa-record-vinyl"></i></div>
+                                    <span class="format-card-name">AIFF</span>
+                                    <span class="format-card-desc">Pro Audio</span>
+                                </button>
+                                <button class="format-card" data-fmt="alac" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fab fa-apple"></i></div>
+                                    <span class="format-card-name">ALAC</span>
+                                    <span class="format-card-desc">Apple Lossless</span>
+                                </button>
+                                <button class="format-card" data-fmt="wma" onclick="selectConvertFormat(this)">
+                                    <div class="format-card-icon"><i class="fab fa-windows"></i></div>
+                                    <span class="format-card-name">WMA</span>
+                                    <span class="format-card-desc">Windows</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="option-group" id="bitrate-group">
+                            <label class="option-label">Bitrate</label>
+                            <div class="bitrate-selector">
+                                <button class="bitrate-btn" data-bitrate="128k" onclick="selectBitrate(this)">128k</button>
+                                <button class="bitrate-btn" data-bitrate="192k" onclick="selectBitrate(this)">192k</button>
+                                <button class="bitrate-btn" data-bitrate="256k" onclick="selectBitrate(this)">256k</button>
+                                <button class="bitrate-btn active" data-bitrate="320k" onclick="selectBitrate(this)">320k</button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-download btn-glow" id="convert-btn" onclick="convertAudio()">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Chuyển đổi</span>
+                        </button>
+                    </div>
+
+                    <!-- Convert Progress -->
+                    <div class="progress-card glass-card hidden" id="convert-progress">
+                        <div class="progress-header">
+                            <span class="progress-label" id="convert-progress-label">Đang chuyển đổi...</span>
+                            <span class="progress-pct" id="convert-progress-pct">0%</span>
+                        </div>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar convert-bar" id="convert-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-actions hidden" id="convert-download-actions">
+                            <a class="btn btn-success" id="convert-download-link" href="#" download>
+                                <i class="fas fa-download"></i> Tải file
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== SEPARATE SUB-TAB ===== -->
+                <div class="studio-content" id="subtab-separate">
+                    <div class="ai-badge glass-card">
+                        <div class="ai-badge-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3>Powered by Facebook Demucs AI</h3>
+                            <p>Mô hình AI tiên tiến nhất để tách nhạc thành các thành phần riêng biệt</p>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone glass-card" id="separate-upload-zone">
+                        <div class="upload-area" id="separate-drop-area">
+                            <input type="file" id="separate-file-input" accept="audio/*" hidden>
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3>Kéo thả file nhạc vào đây</h3>
+                            <p>hoặc <span class="upload-browse" onclick="document.getElementById('separate-file-input').click()">chọn file</span></p>
+                            <p class="upload-formats">Hỗ trợ: MP3, WAV, FLAC, OGG, M4A (tối đa 100MB)</p>
+                        </div>
+                        <div class="file-preview hidden" id="separate-file-preview">
+                            <div class="file-icon"><i class="fas fa-file-audio"></i></div>
+                            <div class="file-details">
+                                <span class="file-name" id="separate-file-name">file.mp3</span>
+                                <span class="file-size" id="separate-file-size">0 MB</span>
+                            </div>
+                            <button class="btn-icon" onclick="removeSeparateFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="separate-options glass-card hidden" id="separate-options">
+                        <div class="option-group">
+                            <label class="option-label">Model AI</label>
+                            <div class="model-selector">
+                                <button class="model-btn active" data-model="htdemucs" onclick="selectModel(this)">
+                                    <div class="model-info">
+                                        <span class="model-name">HTDemucs</span>
+                                        <span class="model-desc">Nhanh & Chính xác</span>
+                                    </div>
+                                    <span class="model-badge">Khuyên dùng</span>
+                                </button>
+                                <button class="model-btn" data-model="htdemucs_ft" onclick="selectModel(this)">
+                                    <div class="model-info">
+                                        <span class="model-name">HTDemucs Fine-tuned</span>
+                                        <span class="model-desc">Chất lượng cao nhất</span>
+                                    </div>
+                                    <span class="model-badge premium">Premium</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label class="option-label">Tách thành phần</label>
+                            <div class="stems-selector">
+                                <button class="stems-btn active" data-stems="all" onclick="selectStems(this)">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Tất cả (4 stems)</span>
+                                    <small>Vocals, Drums, Bass, Other</small>
+                                </button>
+                                <button class="stems-btn" data-stems="vocals" onclick="selectStems(this)">
+                                    <i class="fas fa-microphone-alt"></i>
+                                    <span>Vocal & Instrumental</span>
+                                    <small>Chỉ tách giọng & nhạc nền</small>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-download btn-glow" id="separate-btn" onclick="separateAudio()">
+                            <i class="fas fa-magic"></i>
+                            <span>Tách nhạc với AI</span>
+                        </button>
+                    </div>
+
+                    <!-- Separate Progress -->
+                    <div class="progress-card glass-card hidden" id="separate-progress">
+                        <div class="progress-header">
+                            <span class="progress-label" id="separate-progress-label">Đang xử lý AI...</span>
+                            <span class="progress-pct" id="separate-progress-pct">0%</span>
+                        </div>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar ai-bar" id="separate-progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stems Result -->
+                    <div class="stems-result glass-card hidden" id="stems-result">
+                        <h3 class="stems-result-title">
+                            <i class="fas fa-check-circle"></i>
+                            Tách nhạc thành công!
+                        </h3>
+                        <div class="stems-grid" id="stems-grid">
+                            <!-- Dynamic stem cards -->
+                        </div>
+                        <button class="btn btn-outline" onclick="downloadAllStems()">
+                            <i class="fas fa-download"></i> Tải tất cả
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 MelodyHub &mdash; Tải video & Xử lý nhạc chuyên nghiệp</p>
+            <p class="footer-note">Powered by yt-dlp, FFmpeg & Facebook Demucs AI</p>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Download Modal Popup -->
+    <div class="modal-overlay hidden" id="download-modal">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close-btn" onclick="closeDownloadModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-icon-wrapper">
+                <div class="modal-icon-ring"></div>
+                <div class="modal-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+            <h2 class="modal-title">File sẵn sàng tải về!</h2>
+            <div class="modal-file-info">
+                <div class="modal-file-row">
+                    <span class="modal-file-label"><i class="fas fa-file"></i> Tên file</span>
+                    <span class="modal-file-value" id="modal-filename">video.mp4</span>
+                </div>
+                <div class="modal-file-row">
+                    <span class="modal-file-label"><i class="fas fa-tag"></i> Định dạng</span>
+                    <span class="modal-file-value" id="modal-format">MP4</span>
+                </div>
+                <div class="modal-file-row" id="modal-quality-row">
+                    <span class="modal-file-label"><i class="fas fa-hd"></i> Chất lượng</span>
+                    <span class="modal-file-value" id="modal-quality">720p</span>
+                </div>
+                <div class="modal-file-row">
+                    <span class="modal-file-label"><i class="fas fa-info-circle"></i> Nguồn</span>
+                    <span class="modal-file-value" id="modal-source">YouTube</span>
+                </div>
+            </div>
+            <a class="btn btn-modal-download" id="modal-download-btn" href="#" download>
+                <i class="fas fa-download"></i>
+                <span>Tải về máy</span>
+            </a>
+            <p class="modal-note">File sẽ được lưu vào thư mục Downloads của bạn</p>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
