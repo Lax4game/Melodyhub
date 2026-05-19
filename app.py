@@ -126,7 +126,8 @@ def youtube_info():
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, env=get_subprocess_env())
 
         if result.returncode != 0:
-            return jsonify({'error': 'Không thể lấy thông tin video. Kiểm tra lại URL.'}), 400
+            err_msg = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else 'Lỗi không xác định'
+            return jsonify({'error': f'Không thể lấy thông tin: {err_msg}'}), 400
 
         info = json.loads(result.stdout)
 
@@ -288,7 +289,8 @@ def tiktok_info():
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, env=get_subprocess_env())
 
         if result.returncode != 0:
-            return jsonify({'error': 'Không thể lấy thông tin video TikTok. Kiểm tra lại URL.'}), 400
+            err_msg = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else 'Lỗi không xác định'
+            return jsonify({'error': f'Không thể lấy thông tin TikTok: {err_msg}'}), 400
 
         info = json.loads(result.stdout)
 
