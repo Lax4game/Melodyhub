@@ -161,7 +161,7 @@ def youtube_info():
             'title': info.get('title', 'Unknown'),
             'thumbnail': info.get('thumbnail', ''),
             'duration': info.get('duration', 0),
-            'uploader': info.get('uploader', 'Unknown'),
+            'uploader': info.get('uploader') or info.get('uploader_id') or info.get('channel') or 'Unknown',
             'view_count': info.get('view_count', 0),
             'formats': formats
         }
