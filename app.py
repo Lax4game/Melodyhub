@@ -82,6 +82,11 @@ def get_subprocess_env():
     if FFMPEG_PATH != 'ffmpeg':
         ffmpeg_dir = str(Path(FFMPEG_PATH).parent)
         env['PATH'] = ffmpeg_dir + os.pathsep + env.get('PATH', '')
+    
+    # Giới hạn số lượng thread của PyTorch/CPU để tránh bị văng RAM (OOM) trên Cloud
+    env['OMP_NUM_THREADS'] = '1'
+    env['MKL_NUM_THREADS'] = '1'
+    env['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
     return env
 
 
@@ -523,6 +528,8 @@ def audio_separate():
                 sys.executable, '-m', 'demucs',
                 '--out', str(output_dir),
                 '-n', model,
+                '-j', '1',          # Disable parallel jobs to save RAM
+                '--segment', '2',   # Reduce segment size to save RAM
                 '--mp3',
                 str(input_path)
             ]
