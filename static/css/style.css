@@ -41,7 +41,7 @@ body {
     line-height: 1.6;
 }
 
-.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1050px; margin: 0 auto; padding: 0 24px; }
 
 /* Background Animation */
 .bg-animation {
@@ -98,12 +98,12 @@ body {
 .logo-text { font-size: 22px; font-weight: 800; color: var(--text-primary); }
 .logo-accent { color: var(--accent-primary); }
 
-.nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.nav { display: flex; gap: 4px; }
 .nav-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 18px; border: none; border-radius: var(--radius-md);
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 14px; border: none; border-radius: var(--radius-md);
     background: transparent; color: var(--text-secondary);
-    font-family: inherit; font-size: 14px; font-weight: 500;
+    font-family: inherit; font-size: 13px; font-weight: 500;
     cursor: pointer; transition: var(--transition);
 }
 .nav-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
