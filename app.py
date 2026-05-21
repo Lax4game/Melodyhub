@@ -496,7 +496,10 @@ def audio_separate():
         return jsonify({'error': 'Chưa chọn file'}), 400
 
     file = request.files['file']
-    model = request.form.get('model', 'htdemucs')
+    model = request.form.get('model', 'mdx_extra_q')
+    # Ép dùng mô hình nhẹ (quantized) để tránh lỗi văng RAM (OOM) trên server yếu
+    if model in ['htdemucs', 'htdemucs_ft']:
+        model = 'mdx_extra_q'
     stems = request.form.get('stems', 'all')  # all, vocals, drums, bass, other
 
     if file.filename == '':
