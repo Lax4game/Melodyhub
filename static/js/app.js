@@ -1,14 +1,16 @@
 /**
  * MelodyHub - Frontend Application
- * YouTube/TikTok Downloader & Audio Studio
+ * Multi-Platform Media Downloader
  */
 
 // ==================== STATE ====================
 const state = {
     yt: { format: 'mp4', quality: '720p', taskId: null, title: '' },
     tt: { format: 'mp4', taskId: null, title: '' },
-    convert: { file: null, format: 'wav', bitrate: '320k', taskId: null },
-    separate: { file: null, model: 'htdemucs', stems: 'all', taskId: null, stemFiles: {} }
+    ig: { format: 'mp4', taskId: null, title: '' },
+    sc: { taskId: null, title: '' },
+    pin: { taskId: null, title: '' },
+    fb: { format: 'mp4', taskId: null, title: '' }
 };
 
 // ==================== TAB NAVIGATION ====================
@@ -20,13 +22,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
         document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     });
 });
-
-function switchStudioTab(tab) {
-    document.querySelectorAll('.studio-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.studio-content').forEach(c => c.classList.remove('active'));
-    document.querySelector(`[data-subtab="${tab}"]`).classList.add('active');
-    document.getElementById(`subtab-${tab}`).classList.add('active');
-}
 
 // ==================== HELPERS ====================
 function formatDuration(seconds) {
@@ -72,11 +67,6 @@ async function apiPost(url, data) {
     return res.json();
 }
 
-async function apiPostForm(url, formData) {
-    const res = await fetch(url, { method: 'POST', body: formData });
-    return res.json();
-}
-
 function pollTask(taskId, onProgress, onComplete, onError) {
     const interval = setInterval(async () => {
         try {
@@ -88,6 +78,104 @@ function pollTask(taskId, onProgress, onComplete, onError) {
         } catch (e) { clearInterval(interval); onError('Mất kết nối đến server'); }
     }, 1000);
     return interval;
+}
+
+// ==================== GENERIC PLATFORM DOWNLOAD ====================
+// This is a reusable function for platforms that share the same flow:
+// fetchInfo -> show preview -> download
+
+function createPlatformDownloader(config) {
+    const { prefix, apiInfoUrl, apiDownloadUrl, platformName } = config;
+
+    return {
+        async fetchInfo() {
+            const url = document.getElementById(`${prefix}-url`).value.trim();
+            if (!url) { showToast(`Vui lòng nhập URL ${platformName}`, 'error'); return; }
+
+            setLoading(`${prefix}-fetch-btn`, true);
+            document.getElementById(`${prefix}-result`).classList.add('hidden');
+
+            try {
+                const data = await apiPost(apiInfoUrl, { url });
+                if (data.error) { showToast(data.error, 'error'); return; }
+
+                state[prefix].title = data.title;
+                document.getElementById(`${prefix}-thumbnail`).src = data.thumbnail;
+                document.getElementById(`${prefix}-title`).textContent = data.title;
+
+                // Optional fields
+                const uploaderEl = document.getElementById(`${prefix}-uploader`);
+                if (uploaderEl) uploaderEl.innerHTML = `<i class="fas fa-user"></i> ${data.uploader || 'Unknown'}`;
+                
+                const durationEl = document.getElementById(`${prefix}-duration`);
+                if (durationEl) durationEl.textContent = formatDuration(data.duration);
+
+                const viewsEl = document.getElementById(`${prefix}-views`);
+                if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${formatNumber(data.view_count)} lượt xem`;
+
+                const likesEl = document.getElementById(`${prefix}-likes`);
+                if (likesEl) likesEl.innerHTML = `<i class="fas fa-heart"></i> ${formatNumber(data.like_count)} likes`;
+
+                const playsEl = document.getElementById(`${prefix}-plays`);
+                if (playsEl) playsEl.innerHTML = `<i class="fas fa-play"></i> ${formatNumber(data.play_count || data.view_count)} plays`;
+
+                document.getElementById(`${prefix}-result`).classList.remove('hidden');
+                showToast(`Phân tích ${platformName} thành công!`, 'success');
+            } catch (e) {
+                showToast('Lỗi kết nối đến server', 'error');
+            } finally {
+                setLoading(`${prefix}-fetch-btn`, false);
+            }
+        },
+
+        async download() {
+            const url = document.getElementById(`${prefix}-url`).value.trim();
+            if (!url) return;
+
+            setLoading(`${prefix}-download-btn`, true);
+            const progressEl = document.getElementById(`${prefix}-progress`);
+            const actionsEl = document.getElementById(`${prefix}-download-actions`);
+            progressEl.classList.remove('hidden');
+            actionsEl.classList.add('hidden');
+
+            try {
+                const format = state[prefix].format || 'mp4';
+                const data = await apiPost(apiDownloadUrl, { url, format });
+                if (data.error) { showToast(data.error, 'error'); setLoading(`${prefix}-download-btn`, false); return; }
+
+                state[prefix].taskId = data.task_id;
+                pollTask(data.task_id,
+                    (d) => {
+                        document.getElementById(`${prefix}-progress-bar`).style.width = d.progress + '%';
+                        document.getElementById(`${prefix}-progress-pct`).textContent = Math.round(d.progress) + '%';
+                        document.getElementById(`${prefix}-progress-label`).textContent = d.message;
+                    },
+                    (d) => {
+                        document.getElementById(`${prefix}-progress-bar`).style.width = '100%';
+                        document.getElementById(`${prefix}-progress-pct`).textContent = '100%';
+                        document.getElementById(`${prefix}-progress-label`).textContent = 'Tải xong!';
+                        const ext = state[prefix].format || 'mp4';
+                        const safeName = (state[prefix].title || `${platformName}_media`).substring(0, 50).replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF\s\-_.]/g, '').trim() || platformName.toLowerCase();
+                        const downloadUrl = `/api/download/${d.filename}?name=${encodeURIComponent(safeName + '.' + ext)}`;
+                        const link = document.getElementById(`${prefix}-download-link`);
+                        link.href = downloadUrl;
+                        actionsEl.classList.remove('hidden');
+                        setLoading(`${prefix}-download-btn`, false);
+                        showToast(`Tải ${platformName} thành công!`, 'success');
+                        openDownloadModal(safeName + '.' + ext, ext, 'Original', platformName, downloadUrl);
+                    },
+                    (msg) => {
+                        document.getElementById(`${prefix}-progress-label`).textContent = msg;
+                        setLoading(`${prefix}-download-btn`, false);
+                        showToast(msg, 'error');
+                    }
+                );
+            } catch (e) {
+                showToast('Lỗi kết nối', 'error');
+                setLoading(`${prefix}-download-btn`, false);
+            }
+        }
+    };
 }
 
 // ==================== YOUTUBE ====================
@@ -109,7 +197,6 @@ async function fetchYouTubeInfo() {
         document.getElementById('yt-uploader').innerHTML = `<i class="fas fa-user"></i> ${data.uploader}`;
         document.getElementById('yt-views').innerHTML = `<i class="fas fa-eye"></i> ${formatNumber(data.view_count)} lượt xem`;
 
-        // Render quality options
         const qualityList = document.getElementById('yt-quality-list');
         qualityList.innerHTML = '';
         const videoFormats = data.formats.filter(f => f.height > 0);
@@ -279,230 +366,58 @@ async function downloadTikTok() {
     }
 }
 
-// ==================== AUDIO CONVERT ====================
-const convertInput = document.getElementById('convert-file-input');
-const convertDrop = document.getElementById('convert-drop-area');
-
-convertInput.addEventListener('change', (e) => { if (e.target.files[0]) setConvertFile(e.target.files[0]); });
-
-convertDrop.addEventListener('dragover', (e) => { e.preventDefault(); convertDrop.classList.add('drag-over'); });
-convertDrop.addEventListener('dragleave', () => convertDrop.classList.remove('drag-over'));
-convertDrop.addEventListener('drop', (e) => {
-    e.preventDefault(); convertDrop.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) setConvertFile(e.dataTransfer.files[0]);
+// ==================== INSTAGRAM ====================
+const igDownloader = createPlatformDownloader({
+    prefix: 'ig',
+    apiInfoUrl: '/api/instagram/info',
+    apiDownloadUrl: '/api/instagram/download',
+    platformName: 'Instagram'
 });
-convertDrop.addEventListener('click', () => convertInput.click());
 
-function setConvertFile(file) {
-    state.convert.file = file;
-    document.getElementById('convert-file-name').textContent = file.name;
-    document.getElementById('convert-file-size').textContent = formatFileSize(file.size);
-    document.getElementById('convert-drop-area').classList.add('hidden');
-    document.getElementById('convert-file-preview').classList.remove('hidden');
-    document.getElementById('convert-options').classList.remove('hidden');
+function fetchInstagramInfo() { igDownloader.fetchInfo(); }
+function downloadInstagram() { igDownloader.download(); }
+function selectIGFormat(fmt) {
+    state.ig.format = fmt;
+    document.getElementById('ig-format-mp4').classList.toggle('active', fmt === 'mp4');
+    document.getElementById('ig-format-mp3').classList.toggle('active', fmt === 'mp3');
 }
 
-function removeConvertFile() {
-    state.convert.file = null;
-    convertInput.value = '';
-    document.getElementById('convert-drop-area').classList.remove('hidden');
-    document.getElementById('convert-file-preview').classList.add('hidden');
-    document.getElementById('convert-options').classList.add('hidden');
-}
-
-function selectConvertFormat(btn) {
-    document.querySelectorAll('.format-card').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.convert.format = btn.dataset.fmt;
-    // Show/hide bitrate for lossy formats
-    const lossyFormats = ['mp3', 'ogg', 'aac', 'wma'];
-    document.getElementById('bitrate-group').classList.toggle('hidden', !lossyFormats.includes(btn.dataset.fmt));
-}
-
-function selectBitrate(btn) {
-    document.querySelectorAll('.bitrate-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.convert.bitrate = btn.dataset.bitrate;
-}
-
-async function convertAudio() {
-    if (!state.convert.file) { showToast('Vui lòng chọn file nhạc', 'error'); return; }
-
-    setLoading('convert-btn', true);
-    const progressEl = document.getElementById('convert-progress');
-    const actionsEl = document.getElementById('convert-download-actions');
-    progressEl.classList.remove('hidden');
-    actionsEl.classList.add('hidden');
-
-    const formData = new FormData();
-    formData.append('file', state.convert.file);
-    formData.append('format', state.convert.format);
-    formData.append('bitrate', state.convert.bitrate);
-
-    try {
-        const data = await apiPostForm('/api/audio/convert', formData);
-        if (data.error) { showToast(data.error, 'error'); setLoading('convert-btn', false); return; }
-
-        state.convert.taskId = data.task_id;
-        pollTask(data.task_id,
-            (d) => {
-                document.getElementById('convert-progress-bar').style.width = d.progress + '%';
-                document.getElementById('convert-progress-pct').textContent = Math.round(d.progress) + '%';
-                document.getElementById('convert-progress-label').textContent = d.message;
-            },
-            (d) => {
-                document.getElementById('convert-progress-bar').style.width = '100%';
-                document.getElementById('convert-progress-pct').textContent = '100%';
-                document.getElementById('convert-progress-label').textContent = 'Chuyển đổi xong!';
-                const origName = state.convert.file.name.replace(/\.[^.]+$/, '');
-                const downloadUrl = `/api/download/${d.filename}?name=${encodeURIComponent(origName + '.' + state.convert.format)}`;
-                const link = document.getElementById('convert-download-link');
-                link.href = downloadUrl;
-                actionsEl.classList.remove('hidden');
-                setLoading('convert-btn', false);
-                showToast('Chuyển đổi thành công!', 'success');
-                openDownloadModal(origName + '.' + state.convert.format, state.convert.format, state.convert.bitrate, 'Audio Studio', downloadUrl);
-            },
-            (msg) => {
-                document.getElementById('convert-progress-label').textContent = msg;
-                setLoading('convert-btn', false);
-                showToast(msg, 'error');
-            }
-        );
-    } catch (e) {
-        showToast('Lỗi kết nối', 'error');
-        setLoading('convert-btn', false);
-    }
-}
-
-// ==================== AUDIO SEPARATE ====================
-const separateInput = document.getElementById('separate-file-input');
-const separateDrop = document.getElementById('separate-drop-area');
-
-separateInput.addEventListener('change', (e) => { if (e.target.files[0]) setSeparateFile(e.target.files[0]); });
-
-separateDrop.addEventListener('dragover', (e) => { e.preventDefault(); separateDrop.classList.add('drag-over'); });
-separateDrop.addEventListener('dragleave', () => separateDrop.classList.remove('drag-over'));
-separateDrop.addEventListener('drop', (e) => {
-    e.preventDefault(); separateDrop.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) setSeparateFile(e.dataTransfer.files[0]);
+// ==================== SOUNDCLOUD ====================
+const scDownloader = createPlatformDownloader({
+    prefix: 'sc',
+    apiInfoUrl: '/api/soundcloud/info',
+    apiDownloadUrl: '/api/soundcloud/download',
+    platformName: 'SoundCloud'
 });
-separateDrop.addEventListener('click', () => separateInput.click());
 
-function setSeparateFile(file) {
-    if (file.size > 100 * 1024 * 1024) { showToast('File quá lớn! Tối đa 100MB', 'error'); return; }
-    state.separate.file = file;
-    document.getElementById('separate-file-name').textContent = file.name;
-    document.getElementById('separate-file-size').textContent = formatFileSize(file.size);
-    document.getElementById('separate-drop-area').classList.add('hidden');
-    document.getElementById('separate-file-preview').classList.remove('hidden');
-    document.getElementById('separate-options').classList.remove('hidden');
-}
+function fetchSoundCloudInfo() { scDownloader.fetchInfo(); }
+function downloadSoundCloud() { scDownloader.download(); }
 
-function removeSeparateFile() {
-    state.separate.file = null;
-    separateInput.value = '';
-    document.getElementById('separate-drop-area').classList.remove('hidden');
-    document.getElementById('separate-file-preview').classList.add('hidden');
-    document.getElementById('separate-options').classList.add('hidden');
-}
+// ==================== PINTEREST ====================
+const pinDownloader = createPlatformDownloader({
+    prefix: 'pin',
+    apiInfoUrl: '/api/pinterest/info',
+    apiDownloadUrl: '/api/pinterest/download',
+    platformName: 'Pinterest'
+});
 
-function selectModel(btn) {
-    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.separate.model = btn.dataset.model;
-}
+function fetchPinterestInfo() { pinDownloader.fetchInfo(); }
+function downloadPinterest() { pinDownloader.download(); }
 
-function selectStems(btn) {
-    document.querySelectorAll('.stems-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.separate.stems = btn.dataset.stems;
-}
+// ==================== FACEBOOK ====================
+const fbDownloader = createPlatformDownloader({
+    prefix: 'fb',
+    apiInfoUrl: '/api/facebook/info',
+    apiDownloadUrl: '/api/facebook/download',
+    platformName: 'Facebook'
+});
 
-const stemLabels = {
-    vocals: { name: 'Vocals', desc: 'Giọng hát', icon: 'fa-microphone-alt' },
-    drums: { name: 'Drums', desc: 'Trống & Percussion', icon: 'fa-drum' },
-    bass: { name: 'Bass', desc: 'Bass Guitar & Sub', icon: 'fa-guitar' },
-    other: { name: 'Other', desc: 'Nhạc cụ khác', icon: 'fa-music' },
-    no_vocals: { name: 'Instrumental', desc: 'Nhạc nền (không giọng)', icon: 'fa-sliders' }
-};
-
-async function separateAudio() {
-    if (!state.separate.file) { showToast('Vui lòng chọn file nhạc', 'error'); return; }
-
-    setLoading('separate-btn', true);
-    const progressEl = document.getElementById('separate-progress');
-    const resultEl = document.getElementById('stems-result');
-    progressEl.classList.remove('hidden');
-    resultEl.classList.add('hidden');
-
-    const formData = new FormData();
-    formData.append('file', state.separate.file);
-    formData.append('model', state.separate.model);
-    formData.append('stems', state.separate.stems);
-
-    try {
-        const data = await apiPostForm('/api/audio/separate', formData);
-        if (data.error) { showToast(data.error, 'error'); setLoading('separate-btn', false); return; }
-
-        state.separate.taskId = data.task_id;
-        pollTask(data.task_id,
-            (d) => {
-                document.getElementById('separate-progress-bar').style.width = d.progress + '%';
-                document.getElementById('separate-progress-pct').textContent = Math.round(d.progress) + '%';
-                document.getElementById('separate-progress-label').textContent = d.message;
-            },
-            (d) => {
-                progressEl.classList.add('hidden');
-                setLoading('separate-btn', false);
-
-                state.separate.stemFiles = d.stems;
-                const grid = document.getElementById('stems-grid');
-                grid.innerHTML = '';
-                const origName = state.separate.file.name.replace(/\.[^.]+$/, '');
-
-                for (const [stemKey, filename] of Object.entries(d.stems)) {
-                    const label = stemLabels[stemKey] || { name: stemKey, desc: '', icon: 'fa-file-audio' };
-                    const card = document.createElement('div');
-                    card.className = 'stem-card';
-                    card.innerHTML = `
-                        <div class="stem-icon stem-${stemKey}"><i class="fas ${label.icon}"></i></div>
-                        <div class="stem-info">
-                            <div class="stem-name">${label.name}</div>
-                            <div class="stem-desc">${label.desc}</div>
-                        </div>
-                        <a class="stem-download" href="/api/download/${filename}?name=${encodeURIComponent(origName + '_' + label.name + '.mp3')}" download title="Tải ${label.name}">
-                            <i class="fas fa-download"></i>
-                        </a>`;
-                    grid.appendChild(card);
-                }
-
-                resultEl.classList.remove('hidden');
-                showToast('Tách nhạc AI thành công!', 'success');
-            },
-            (msg) => {
-                document.getElementById('separate-progress-label').textContent = msg;
-                setLoading('separate-btn', false);
-                showToast(msg, 'error');
-            }
-        );
-    } catch (e) {
-        showToast('Lỗi kết nối', 'error');
-        setLoading('separate-btn', false);
-    }
-}
-
-function downloadAllStems() {
-    for (const [stemKey, filename] of Object.entries(state.separate.stemFiles)) {
-        const label = stemLabels[stemKey] || { name: stemKey };
-        const origName = state.separate.file ? state.separate.file.name.replace(/\.[^.]+$/, '') : 'audio';
-        const a = document.createElement('a');
-        a.href = `/api/download/${filename}?name=${encodeURIComponent(origName + '_' + label.name + '.mp3')}`;
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-    }
+function fetchFacebookInfo() { fbDownloader.fetchInfo(); }
+function downloadFacebook() { fbDownloader.download(); }
+function selectFBFormat(fmt) {
+    state.fb.format = fmt;
+    document.getElementById('fb-format-mp4').classList.toggle('active', fmt === 'mp4');
+    document.getElementById('fb-format-mp3').classList.toggle('active', fmt === 'mp3');
 }
 
 // ==================== DOWNLOAD MODAL ====================
@@ -532,3 +447,7 @@ function closeDownloadModal() {
 // ==================== ENTER KEY SUPPORT ====================
 document.getElementById('yt-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchYouTubeInfo(); });
 document.getElementById('tt-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchTikTokInfo(); });
+document.getElementById('ig-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchInstagramInfo(); });
+document.getElementById('sc-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchSoundCloudInfo(); });
+document.getElementById('pin-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchPinterestInfo(); });
+document.getElementById('fb-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') fetchFacebookInfo(); });

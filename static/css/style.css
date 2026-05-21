@@ -98,7 +98,7 @@ body {
 .logo-text { font-size: 22px; font-weight: 800; color: var(--text-primary); }
 .logo-accent { color: var(--accent-primary); }
 
-.nav { display: flex; gap: 6px; }
+.nav { display: flex; gap: 6px; flex-wrap: wrap; }
 .nav-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 18px; border: none; border-radius: var(--radius-md);
@@ -134,6 +134,10 @@ body {
 .youtube-gradient { background: linear-gradient(135deg, #ff4444, #cc0000); }
 .tiktok-gradient { background: linear-gradient(135deg, var(--tiktok-cyan), var(--tiktok-pink)); }
 .studio-gradient { background: linear-gradient(135deg, var(--accent-primary), #a855f7); }
+.instagram-gradient { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+.soundcloud-gradient { background: linear-gradient(135deg, #ff7700, #ff3300); }
+.pinterest-gradient { background: linear-gradient(135deg, #e60023, #bd081c); }
+.facebook-gradient { background: linear-gradient(135deg, #1877f2, #0866ff); }
 .section-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
 .section-desc { color: var(--text-secondary); font-size: 15px; margin-top: 4px; }
 

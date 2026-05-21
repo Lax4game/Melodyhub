@@ -1,6 +1,6 @@
 """
 MelodyHub - Backend Server
-YouTube/TikTok Downloader & Audio Processing Studio
+Multi-Platform Media Downloader
 """
 
 import os
@@ -404,141 +404,77 @@ def tiktok_download():
     return jsonify({'task_id': task_id})
 
 
-# ==================== AUDIO STUDIO ====================
+# ==================== GENERIC PLATFORM DOWNLOADER ====================
 
-@app.route('/api/audio/convert', methods=['POST'])
-def audio_convert():
-    """Convert audio file to different format."""
-    if 'file' not in request.files:
-        return jsonify({'error': 'Chưa chọn file'}), 400
+def generic_info(url, platform_name):
+    """Get video/media information from any yt-dlp supported platform."""
+    if not url:
+        return jsonify({'error': 'URL không được để trống'}), 400
 
-    file = request.files['file']
-    target_format = request.form.get('format', 'wav')
-    bitrate = request.form.get('bitrate', '320k')
+    try:
+        cmd = [
+            *get_yt_dlp_cmd(),
+            '--dump-json',
+            '--no-playlist',
+            url
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, env=get_subprocess_env())
 
-    if file.filename == '':
-        return jsonify({'error': 'Chưa chọn file'}), 400
+        if result.returncode != 0:
+            err_msg = result.stderr.strip().splitlines()[-1] if result.stderr.strip() else 'Lỗi không xác định'
+            return jsonify({'error': f'Không thể lấy thông tin {platform_name}: {err_msg}'}), 400
+
+        info = json.loads(result.stdout)
+
+        response = {
+            'title': info.get('title', info.get('description', f'{platform_name} Media'))[:100],
+            'thumbnail': info.get('thumbnail', ''),
+            'duration': info.get('duration', 0),
+            'uploader': info.get('uploader') or info.get('creator') or info.get('channel') or 'Unknown',
+            'view_count': info.get('view_count', 0),
+            'like_count': info.get('like_count', 0),
+            'play_count': info.get('view_count', 0),
+        }
+
+        return jsonify(response)
+
+    except subprocess.TimeoutExpired:
+        return jsonify({'error': 'Timeout'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def generic_download(url, format_type, platform_name):
+    """Download media from any yt-dlp supported platform."""
+    if not url:
+        return jsonify({'error': 'URL không được để trống'}), 400
 
     task_id = str(uuid.uuid4())
-    tasks[task_id] = {'status': 'processing', 'progress': 0, 'message': 'Đang upload file...'}
+    tasks[task_id] = {'status': 'processing', 'progress': 0, 'message': 'Đang bắt đầu tải...'}
 
-    # Save uploaded file
-    input_ext = Path(file.filename).suffix
-    input_path = UPLOAD_DIR / f'{task_id}{input_ext}'
-    file.save(str(input_path))
-
-    def convert_task():
+    def download_task():
         try:
-            tasks[task_id]['message'] = 'Đang chuyển đổi...'
-            tasks[task_id]['progress'] = 30
+            output_path = str(DOWNLOAD_DIR / f'{task_id}.%(ext)s')
 
-            output_filename = f'{task_id}.{target_format}'
-            output_path = DOWNLOAD_DIR / output_filename
-
-            cmd = [get_ffmpeg_path(), '-i', str(input_path), '-y']
-
-            # Format-specific options
-            if target_format == 'mp3':
-                cmd.extend(['-codec:a', 'libmp3lame', '-b:a', bitrate])
-            elif target_format == 'flac':
-                cmd.extend(['-codec:a', 'flac'])
-            elif target_format == 'wav':
-                cmd.extend(['-codec:a', 'pcm_s24le'])
-            elif target_format == 'ogg':
-                cmd.extend(['-codec:a', 'libvorbis', '-q:a', '10'])
-            elif target_format == 'aac':
-                cmd.extend(['-codec:a', 'aac', '-b:a', bitrate])
-            elif target_format == 'aiff':
-                cmd.extend(['-codec:a', 'pcm_s24le'])
-            elif target_format == 'wma':
-                cmd.extend(['-codec:a', 'wmav2', '-b:a', bitrate])
-            elif target_format == 'alac':
-                cmd.extend(['-codec:a', 'alac'])
-
-            cmd.append(str(output_path))
-
-            tasks[task_id]['progress'] = 50
-
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, env=get_subprocess_env())
-
-            if result.returncode == 0:
-                tasks[task_id]['status'] = 'completed'
-                tasks[task_id]['progress'] = 100
-                tasks[task_id]['filename'] = output_filename
-                tasks[task_id]['message'] = 'Chuyển đổi xong!'
+            if format_type == 'mp3':
+                cmd = [
+                    *get_yt_dlp_cmd(),
+                    '-x',
+                    '--audio-format', 'mp3',
+                    '--audio-quality', '0',
+                    '--no-playlist',
+                    '-o', output_path,
+                    '--newline',
+                    url
+                ]
             else:
-                tasks[task_id]['status'] = 'error'
-                tasks[task_id]['message'] = f'Lỗi chuyển đổi: {result.stderr[:200]}'
-
-            # Clean up input file
-            try:
-                input_path.unlink()
-            except:
-                pass
-
-        except subprocess.TimeoutExpired:
-            tasks[task_id]['status'] = 'error'
-            tasks[task_id]['message'] = 'Timeout khi chuyển đổi'
-        except Exception as e:
-            tasks[task_id]['status'] = 'error'
-            tasks[task_id]['message'] = str(e)
-
-    thread = threading.Thread(target=convert_task)
-    thread.start()
-
-    return jsonify({'task_id': task_id})
-
-
-@app.route('/api/audio/separate', methods=['POST'])
-def audio_separate():
-    """Separate audio into stems using Demucs."""
-    if 'file' not in request.files:
-        return jsonify({'error': 'Chưa chọn file'}), 400
-
-    file = request.files['file']
-    model = request.form.get('model', 'mdx_extra_q')
-    # Ép dùng mô hình nhẹ (quantized) để tránh lỗi văng RAM (OOM) trên server yếu
-    if model in ['htdemucs', 'htdemucs_ft']:
-        model = 'mdx_extra_q'
-    stems = request.form.get('stems', 'all')  # all, vocals, drums, bass, other
-
-    if file.filename == '':
-        return jsonify({'error': 'Chưa chọn file'}), 400
-
-    task_id = str(uuid.uuid4())
-    original_name = Path(file.filename).stem
-    tasks[task_id] = {
-        'status': 'processing',
-        'progress': 0,
-        'message': 'Đang upload file...',
-        'original_name': original_name
-    }
-
-    # Save uploaded file
-    input_ext = Path(file.filename).suffix
-    input_path = UPLOAD_DIR / f'{task_id}{input_ext}'
-    file.save(str(input_path))
-
-    def separate_task():
-        try:
-            tasks[task_id]['message'] = 'Đang tách nhạc với AI (có thể mất vài phút)...'
-            tasks[task_id]['progress'] = 10
-
-            output_dir = TEMP_DIR / task_id
-
-            # Use demucs CLI
-            cmd = [
-                sys.executable, '-m', 'demucs',
-                '--out', str(output_dir),
-                '-n', model,
-                '-j', '1',          # Disable parallel jobs to save RAM
-                '--segment', '2',   # Reduce segment size to save RAM
-                '--mp3',
-                str(input_path)
-            ]
-
-            if stems == 'vocals':
-                cmd.extend(['--two-stems', 'vocals'])
+                cmd = [
+                    *get_yt_dlp_cmd(),
+                    '--no-playlist',
+                    '-o', output_path,
+                    '--newline',
+                    url
+                ]
 
             process = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -551,76 +487,110 @@ def audio_separate():
                 if not line:
                     continue
                 full_output.append(line)
-                print(f"[DEMUCS] {line}")
-                if '%' in line:
+                print(f"[{platform_name}] {line}")
+                if '[download]' in line and '%' in line:
                     try:
-                        pct_str = line.split('%')[0].strip().split()[-1]
-                        pct = float(pct_str)
-                        tasks[task_id]['progress'] = min(10 + pct * 0.85, 95)
-                        tasks[task_id]['message'] = f'Đang xử lý AI: {pct:.0f}%'
+                        pct = float(line.split('%')[0].split()[-1])
+                        tasks[task_id]['progress'] = pct
+                        tasks[task_id]['message'] = f'Đang tải: {pct:.1f}%'
                     except (ValueError, IndexError):
                         pass
-                else:
-                    tasks[task_id]['message'] = f'Đang xử lý: {line[:60]}'
+                elif '[Merger]' in line or '[ExtractAudio]' in line or '[Metadata]' in line:
+                    tasks[task_id]['message'] = 'Đang xử lý file...'
 
             process.wait()
 
             if process.returncode == 0:
-                # Find output stems
-                stem_dir = output_dir / model / task_id
-                if not stem_dir.exists():
-                    # Try to find the correct directory
-                    for d in (output_dir / model).iterdir():
-                        if d.is_dir():
-                            stem_dir = d
-                            break
+                downloaded_file = find_downloaded_file(task_id)
 
-                stem_files = {}
-                if stem_dir.exists():
-                    for stem_file in stem_dir.iterdir():
-                        if stem_file.is_file():
-                            stem_name = stem_file.stem
-                            # Copy to downloads
-                            dest = DOWNLOAD_DIR / f'{task_id}_{stem_name}{stem_file.suffix}'
-                            shutil.copy2(str(stem_file), str(dest))
-                            stem_files[stem_name] = dest.name
-
-                if stem_files:
+                if downloaded_file:
                     tasks[task_id]['status'] = 'completed'
                     tasks[task_id]['progress'] = 100
-                    tasks[task_id]['stems'] = stem_files
-                    tasks[task_id]['message'] = 'Tách nhạc xong!'
+                    tasks[task_id]['filename'] = downloaded_file.name
+                    tasks[task_id]['message'] = 'Tải xong!'
                 else:
                     tasks[task_id]['status'] = 'error'
-                    tasks[task_id]['message'] = 'Không tìm thấy file output'
-
-                # Cleanup
-                try:
-                    shutil.rmtree(str(output_dir))
-                except:
-                    pass
+                    tasks[task_id]['message'] = 'Không tìm thấy file đã tải'
             else:
                 tasks[task_id]['status'] = 'error'
-                if full_output:
-                    err_msg = " | ".join(full_output[-3:])
-                else:
-                    err_msg = f'No output, return code: {process.returncode} (Có thể do Server bị văng RAM - OOM)'
+                err_msg = full_output[-1] if full_output else 'Unknown error'
                 tasks[task_id]['message'] = f'Lỗi: {err_msg}'
-
-            # Clean up input file
-            try:
-                input_path.unlink()
-            except:
-                pass
 
         except Exception as e:
             tasks[task_id]['status'] = 'error'
             tasks[task_id]['message'] = str(e)
 
-    thread = threading.Thread(target=separate_task)
+    thread = threading.Thread(target=download_task)
     thread.start()
 
     return jsonify({'task_id': task_id})
+
+
+# ==================== INSTAGRAM ====================
+
+@app.route('/api/instagram/info', methods=['POST'])
+def instagram_info():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    return generic_info(url, 'Instagram')
+
+
+@app.route('/api/instagram/download', methods=['POST'])
+def instagram_download():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    format_type = data.get('format', 'mp4')
+    return generic_download(url, format_type, 'Instagram')
+
+
+# ==================== SOUNDCLOUD ====================
+
+@app.route('/api/soundcloud/info', methods=['POST'])
+def soundcloud_info():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    return generic_info(url, 'SoundCloud')
+
+
+@app.route('/api/soundcloud/download', methods=['POST'])
+def soundcloud_download():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    return generic_download(url, 'mp3', 'SoundCloud')
+
+
+# ==================== PINTEREST ====================
+
+@app.route('/api/pinterest/info', methods=['POST'])
+def pinterest_info():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    return generic_info(url, 'Pinterest')
+
+
+@app.route('/api/pinterest/download', methods=['POST'])
+def pinterest_download():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    format_type = data.get('format', 'mp4')
+    return generic_download(url, format_type, 'Pinterest')
+
+
+# ==================== FACEBOOK ====================
+
+@app.route('/api/facebook/info', methods=['POST'])
+def facebook_info():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    return generic_info(url, 'Facebook')
+
+
+@app.route('/api/facebook/download', methods=['POST'])
+def facebook_download():
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    format_type = data.get('format', 'mp4')
+    return generic_download(url, format_type, 'Facebook')
 
 
 # ==================== TASK STATUS & FILE DOWNLOAD ====================
@@ -678,7 +648,7 @@ def cleanup_task(task_id):
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("  MelodyHub - Media Download & Audio Studio")
+    print("  MelodyHub - Multi-Platform Media Downloader")
     print("  URL: http://localhost:5000")
     print("=" * 60)
     app.run(host='0.0.0.0', port=5000, debug=True)

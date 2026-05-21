@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MelodyHub - Tải Video & Xử Lý Nhạc Chuyên Nghiệp</title>
-    <meta name="description" content="Tải video YouTube, TikTok, chuyển đổi định dạng nhạc và tách vocal/instrumental với AI Demucs">
+    <title>MelodyHub - Tải Video & Nhạc Từ Mọi Nền Tảng</title>
+    <meta name="description" content="Tải video YouTube, TikTok, Instagram, Facebook, Pinterest, SoundCloud - Hỗ trợ tất cả nền tảng">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
@@ -36,9 +36,21 @@
                     <i class="fab fa-tiktok"></i>
                     <span>TikTok</span>
                 </button>
-                <button class="nav-btn" data-tab="studio" id="nav-studio">
-                    <i class="fas fa-sliders"></i>
-                    <span>Audio Studio</span>
+                <button class="nav-btn" data-tab="instagram" id="nav-instagram">
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                </button>
+                <button class="nav-btn" data-tab="soundcloud" id="nav-soundcloud">
+                    <i class="fab fa-soundcloud"></i>
+                    <span>SoundCloud</span>
+                </button>
+                <button class="nav-btn" data-tab="pinterest" id="nav-pinterest">
+                    <i class="fab fa-pinterest"></i>
+                    <span>Pinterest</span>
+                </button>
+                <button class="nav-btn" data-tab="facebook" id="nav-facebook">
+                    <i class="fab fa-facebook"></i>
+                    <span>Facebook</span>
                 </button>
             </nav>
         </div>
@@ -210,234 +222,277 @@
                 </div>
             </section>
 
-            <!-- ==================== AUDIO STUDIO TAB ==================== -->
-            <section class="tab-content" id="tab-studio">
+            <!-- ==================== INSTAGRAM TAB ==================== -->
+            <section class="tab-content" id="tab-instagram">
                 <div class="section-header">
-                    <div class="section-icon studio-gradient">
-                        <i class="fas fa-sliders"></i>
+                    <div class="section-icon instagram-gradient">
+                        <i class="fab fa-instagram"></i>
                     </div>
                     <div>
-                        <h1 class="section-title">Audio Studio</h1>
-                        <p class="section-desc">Chuyển đổi định dạng & Tách vocal/instrumental bằng AI</p>
+                        <h1 class="section-title">Instagram Downloader</h1>
+                        <p class="section-desc">Tải Reels, Story, ảnh & video từ Instagram</p>
                     </div>
                 </div>
 
-                <!-- Sub-tabs for Studio -->
-                <div class="studio-tabs">
-                    <button class="studio-tab active" data-subtab="convert" id="studio-tab-convert" onclick="switchStudioTab('convert')">
-                        <i class="fas fa-exchange-alt"></i>
-                        Chuyển đổi định dạng
-                    </button>
-                    <button class="studio-tab" data-subtab="separate" id="studio-tab-separate" onclick="switchStudioTab('separate')">
-                        <i class="fas fa-layer-group"></i>
-                        Tách Vocal / Instrumental
-                    </button>
-                </div>
-
-                <!-- ===== CONVERT SUB-TAB ===== -->
-                <div class="studio-content active" id="subtab-convert">
-                    <div class="upload-zone glass-card" id="convert-upload-zone">
-                        <div class="upload-area" id="convert-drop-area">
-                            <input type="file" id="convert-file-input" accept="audio/*" hidden>
-                            <div class="upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <h3>Kéo thả file nhạc vào đây</h3>
-                            <p>hoặc <span class="upload-browse" onclick="document.getElementById('convert-file-input').click()">chọn file</span></p>
-                            <p class="upload-formats">Hỗ trợ: MP3, WAV, FLAC, OGG, AAC, AIFF, WMA, M4A</p>
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
                         </div>
-                        <div class="file-preview hidden" id="convert-file-preview">
-                            <div class="file-icon"><i class="fas fa-file-audio"></i></div>
-                            <div class="file-details">
-                                <span class="file-name" id="convert-file-name">file.mp3</span>
-                                <span class="file-size" id="convert-file-size">0 MB</span>
-                            </div>
-                            <button class="btn-icon" onclick="removeConvertFile()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="convert-options glass-card hidden" id="convert-options">
-                        <div class="option-group">
-                            <label class="option-label">Chuyển đổi sang</label>
-                            <div class="format-grid">
-                                <button class="format-card active" data-fmt="wav" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-wave-square"></i></div>
-                                    <span class="format-card-name">WAV</span>
-                                    <span class="format-card-desc">Lossless</span>
-                                </button>
-                                <button class="format-card" data-fmt="flac" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-compact-disc"></i></div>
-                                    <span class="format-card-name">FLAC</span>
-                                    <span class="format-card-desc">Hi-Res</span>
-                                </button>
-                                <button class="format-card" data-fmt="mp3" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-music"></i></div>
-                                    <span class="format-card-name">MP3</span>
-                                    <span class="format-card-desc">Universal</span>
-                                </button>
-                                <button class="format-card" data-fmt="ogg" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-file-audio"></i></div>
-                                    <span class="format-card-name">OGG</span>
-                                    <span class="format-card-desc">Open Source</span>
-                                </button>
-                                <button class="format-card" data-fmt="aac" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-headphones"></i></div>
-                                    <span class="format-card-name">AAC</span>
-                                    <span class="format-card-desc">Apple</span>
-                                </button>
-                                <button class="format-card" data-fmt="aiff" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fas fa-record-vinyl"></i></div>
-                                    <span class="format-card-name">AIFF</span>
-                                    <span class="format-card-desc">Pro Audio</span>
-                                </button>
-                                <button class="format-card" data-fmt="alac" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fab fa-apple"></i></div>
-                                    <span class="format-card-name">ALAC</span>
-                                    <span class="format-card-desc">Apple Lossless</span>
-                                </button>
-                                <button class="format-card" data-fmt="wma" onclick="selectConvertFormat(this)">
-                                    <div class="format-card-icon"><i class="fab fa-windows"></i></div>
-                                    <span class="format-card-name">WMA</span>
-                                    <span class="format-card-desc">Windows</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="option-group" id="bitrate-group">
-                            <label class="option-label">Bitrate</label>
-                            <div class="bitrate-selector">
-                                <button class="bitrate-btn" data-bitrate="128k" onclick="selectBitrate(this)">128k</button>
-                                <button class="bitrate-btn" data-bitrate="192k" onclick="selectBitrate(this)">192k</button>
-                                <button class="bitrate-btn" data-bitrate="256k" onclick="selectBitrate(this)">256k</button>
-                                <button class="bitrate-btn active" data-bitrate="320k" onclick="selectBitrate(this)">320k</button>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-download btn-glow" id="convert-btn" onclick="convertAudio()">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span>Chuyển đổi</span>
+                        <input type="text" id="ig-url" class="url-input" placeholder="Dán link Instagram vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="ig-fetch-btn" onclick="fetchInstagramInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
                         </button>
-                    </div>
-
-                    <!-- Convert Progress -->
-                    <div class="progress-card glass-card hidden" id="convert-progress">
-                        <div class="progress-header">
-                            <span class="progress-label" id="convert-progress-label">Đang chuyển đổi...</span>
-                            <span class="progress-pct" id="convert-progress-pct">0%</span>
-                        </div>
-                        <div class="progress-bar-wrapper">
-                            <div class="progress-bar convert-bar" id="convert-progress-bar" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-actions hidden" id="convert-download-actions">
-                            <a class="btn btn-success" id="convert-download-link" href="#" download>
-                                <i class="fas fa-download"></i> Tải file
-                            </a>
-                        </div>
                     </div>
                 </div>
 
-                <!-- ===== SEPARATE SUB-TAB ===== -->
-                <div class="studio-content" id="subtab-separate">
-                    <div class="ai-badge glass-card">
-                        <div class="ai-badge-icon">
-                            <i class="fas fa-robot"></i>
+                <div class="result-card glass-card hidden" id="ig-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper">
+                            <img id="ig-thumbnail" src="" alt="Thumbnail">
                         </div>
-                        <div>
-                            <h3>Powered by Facebook Demucs AI</h3>
-                            <p>Mô hình AI tiên tiến nhất để tách nhạc thành các thành phần riêng biệt</p>
+                        <div class="video-info">
+                            <h2 class="video-title" id="ig-title">Post Title</h2>
+                            <div class="video-meta">
+                                <span id="ig-uploader"><i class="fas fa-user"></i> User</span>
+                                <span id="ig-likes"><i class="fas fa-heart"></i> 0 likes</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="upload-zone glass-card" id="separate-upload-zone">
-                        <div class="upload-area" id="separate-drop-area">
-                            <input type="file" id="separate-file-input" accept="audio/*" hidden>
-                            <div class="upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <h3>Kéo thả file nhạc vào đây</h3>
-                            <p>hoặc <span class="upload-browse" onclick="document.getElementById('separate-file-input').click()">chọn file</span></p>
-                            <p class="upload-formats">Hỗ trợ: MP3, WAV, FLAC, OGG, M4A (tối đa 100MB)</p>
-                        </div>
-                        <div class="file-preview hidden" id="separate-file-preview">
-                            <div class="file-icon"><i class="fas fa-file-audio"></i></div>
-                            <div class="file-details">
-                                <span class="file-name" id="separate-file-name">file.mp3</span>
-                                <span class="file-size" id="separate-file-size">0 MB</span>
-                            </div>
-                            <button class="btn-icon" onclick="removeSeparateFile()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="separate-options glass-card hidden" id="separate-options">
+                    <div class="download-options">
                         <div class="option-group">
-                            <label class="option-label">Model AI</label>
-                            <div class="model-selector">
-                                <button class="model-btn active" data-model="htdemucs" onclick="selectModel(this)">
-                                    <div class="model-info">
-                                        <span class="model-name">HTDemucs</span>
-                                        <span class="model-desc">Nhanh & Chính xác</span>
-                                    </div>
-                                    <span class="model-badge">Khuyên dùng</span>
+                            <label class="option-label">Định dạng</label>
+                            <div class="format-selector">
+                                <button class="format-btn active" data-format="mp4" id="ig-format-mp4" onclick="selectIGFormat('mp4')">
+                                    <i class="fas fa-video"></i> MP4
                                 </button>
-                                <button class="model-btn" data-model="htdemucs_ft" onclick="selectModel(this)">
-                                    <div class="model-info">
-                                        <span class="model-name">HTDemucs Fine-tuned</span>
-                                        <span class="model-desc">Chất lượng cao nhất</span>
-                                    </div>
-                                    <span class="model-badge premium">Premium</span>
+                                <button class="format-btn" data-format="mp3" id="ig-format-mp3" onclick="selectIGFormat('mp3')">
+                                    <i class="fas fa-music"></i> MP3
                                 </button>
                             </div>
                         </div>
 
-                        <div class="option-group">
-                            <label class="option-label">Tách thành phần</label>
-                            <div class="stems-selector">
-                                <button class="stems-btn active" data-stems="all" onclick="selectStems(this)">
-                                    <i class="fas fa-layer-group"></i>
-                                    <span>Tất cả (4 stems)</span>
-                                    <small>Vocals, Drums, Bass, Other</small>
-                                </button>
-                                <button class="stems-btn" data-stems="vocals" onclick="selectStems(this)">
-                                    <i class="fas fa-microphone-alt"></i>
-                                    <span>Vocal & Instrumental</span>
-                                    <small>Chỉ tách giọng & nhạc nền</small>
-                                </button>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-download btn-glow" id="separate-btn" onclick="separateAudio()">
-                            <i class="fas fa-magic"></i>
-                            <span>Tách nhạc với AI</span>
+                        <button class="btn btn-download btn-glow" id="ig-download-btn" onclick="downloadInstagram()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải xuống</span>
                         </button>
                     </div>
+                </div>
 
-                    <!-- Separate Progress -->
-                    <div class="progress-card glass-card hidden" id="separate-progress">
-                        <div class="progress-header">
-                            <span class="progress-label" id="separate-progress-label">Đang xử lý AI...</span>
-                            <span class="progress-pct" id="separate-progress-pct">0%</span>
+                <div class="progress-card glass-card hidden" id="ig-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="ig-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="ig-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="ig-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="ig-download-actions">
+                        <a class="btn btn-success" id="ig-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SOUNDCLOUD TAB ==================== -->
+            <section class="tab-content" id="tab-soundcloud">
+                <div class="section-header">
+                    <div class="section-icon soundcloud-gradient">
+                        <i class="fab fa-soundcloud"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">SoundCloud Downloader</h1>
+                        <p class="section-desc">Tải nhạc từ SoundCloud chất lượng cao</p>
+                    </div>
+                </div>
+
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
                         </div>
-                        <div class="progress-bar-wrapper">
-                            <div class="progress-bar ai-bar" id="separate-progress-bar" style="width: 0%"></div>
+                        <input type="text" id="sc-url" class="url-input" placeholder="Dán link SoundCloud vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="sc-fetch-btn" onclick="fetchSoundCloudInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="result-card glass-card hidden" id="sc-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper">
+                            <img id="sc-thumbnail" src="" alt="Thumbnail">
+                        </div>
+                        <div class="video-info">
+                            <h2 class="video-title" id="sc-title">Track Title</h2>
+                            <div class="video-meta">
+                                <span id="sc-uploader"><i class="fas fa-user"></i> Artist</span>
+                                <span id="sc-plays"><i class="fas fa-play"></i> 0 plays</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stems Result -->
-                    <div class="stems-result glass-card hidden" id="stems-result">
-                        <h3 class="stems-result-title">
-                            <i class="fas fa-check-circle"></i>
-                            Tách nhạc thành công!
-                        </h3>
-                        <div class="stems-grid" id="stems-grid">
-                            <!-- Dynamic stem cards -->
-                        </div>
-                        <button class="btn btn-outline" onclick="downloadAllStems()">
-                            <i class="fas fa-download"></i> Tải tất cả
+                    <div class="download-options">
+                        <button class="btn btn-download btn-glow" id="sc-download-btn" onclick="downloadSoundCloud()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải nhạc MP3</span>
                         </button>
+                    </div>
+                </div>
+
+                <div class="progress-card glass-card hidden" id="sc-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="sc-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="sc-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="sc-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="sc-download-actions">
+                        <a class="btn btn-success" id="sc-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PINTEREST TAB ==================== -->
+            <section class="tab-content" id="tab-pinterest">
+                <div class="section-header">
+                    <div class="section-icon pinterest-gradient">
+                        <i class="fab fa-pinterest"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">Pinterest Downloader</h1>
+                        <p class="section-desc">Tải ảnh & video từ Pinterest chất lượng gốc</p>
+                    </div>
+                </div>
+
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <input type="text" id="pin-url" class="url-input" placeholder="Dán link Pinterest vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="pin-fetch-btn" onclick="fetchPinterestInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="result-card glass-card hidden" id="pin-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper">
+                            <img id="pin-thumbnail" src="" alt="Thumbnail">
+                        </div>
+                        <div class="video-info">
+                            <h2 class="video-title" id="pin-title">Pin Title</h2>
+                            <div class="video-meta">
+                                <span id="pin-uploader"><i class="fas fa-user"></i> Pinner</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="download-options">
+                        <button class="btn btn-download btn-glow" id="pin-download-btn" onclick="downloadPinterest()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải xuống</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-card glass-card hidden" id="pin-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="pin-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="pin-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="pin-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="pin-download-actions">
+                        <a class="btn btn-success" id="pin-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== FACEBOOK TAB ==================== -->
+            <section class="tab-content" id="tab-facebook">
+                <div class="section-header">
+                    <div class="section-icon facebook-gradient">
+                        <i class="fab fa-facebook"></i>
+                    </div>
+                    <div>
+                        <h1 class="section-title">Facebook Downloader</h1>
+                        <p class="section-desc">Tải video & Reels từ Facebook chất lượng cao</p>
+                    </div>
+                </div>
+
+                <div class="input-card glass-card">
+                    <div class="input-group">
+                        <div class="input-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <input type="text" id="fb-url" class="url-input" placeholder="Dán link Facebook vào đây..." autocomplete="off">
+                        <button class="btn btn-primary btn-pulse" id="fb-fetch-btn" onclick="fetchFacebookInfo()">
+                            <i class="fas fa-search"></i>
+                            <span>Phân tích</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="result-card glass-card hidden" id="fb-result">
+                    <div class="video-preview">
+                        <div class="thumbnail-wrapper">
+                            <img id="fb-thumbnail" src="" alt="Thumbnail">
+                        </div>
+                        <div class="video-info">
+                            <h2 class="video-title" id="fb-title">Video Title</h2>
+                            <div class="video-meta">
+                                <span id="fb-uploader"><i class="fas fa-user"></i> Page</span>
+                                <span id="fb-views"><i class="fas fa-eye"></i> 0 views</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="download-options">
+                        <div class="option-group">
+                            <label class="option-label">Định dạng</label>
+                            <div class="format-selector">
+                                <button class="format-btn active" data-format="mp4" id="fb-format-mp4" onclick="selectFBFormat('mp4')">
+                                    <i class="fas fa-video"></i> MP4
+                                </button>
+                                <button class="format-btn" data-format="mp3" id="fb-format-mp3" onclick="selectFBFormat('mp3')">
+                                    <i class="fas fa-music"></i> MP3
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-download btn-glow" id="fb-download-btn" onclick="downloadFacebook()">
+                            <i class="fas fa-download"></i>
+                            <span>Tải xuống</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-card glass-card hidden" id="fb-progress">
+                    <div class="progress-header">
+                        <span class="progress-label" id="fb-progress-label">Đang tải...</span>
+                        <span class="progress-pct" id="fb-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="fb-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-actions hidden" id="fb-download-actions">
+                        <a class="btn btn-success" id="fb-download-link" href="#" download>
+                            <i class="fas fa-download"></i> Tải file
+                        </a>
                     </div>
                 </div>
             </section>
@@ -447,8 +502,8 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>© 2026 MelodyHub &mdash; Tải video & Xử lý nhạc chuyên nghiệp</p>
-            <p class="footer-note">Powered by yt-dlp, FFmpeg & Facebook Demucs AI</p>
+            <p>© 2026 MelodyHub &mdash; Tải video & nhạc từ mọi nền tảng</p>
+            <p class="footer-note">Powered by yt-dlp & FFmpeg</p>
         </div>
     </footer>
 
