@@ -66,7 +66,7 @@ def get_yt_dlp_cmd():
     cmd.extend([
         '--force-ipv4',
         '--geo-bypass',
-        '--extractor-args', 'youtube:player-client=tv,web;formats=missing_pot'
+        '--extractor-args', 'youtube:player-client=android;formats=missing_pot'
     ])
     return cmd
 
