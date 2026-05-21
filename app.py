@@ -598,8 +598,11 @@ def audio_separate():
                     pass
             else:
                 tasks[task_id]['status'] = 'error'
-                err_msg = full_output[-1] if full_output else 'Unknown error'
-                tasks[task_id]['message'] = f'Lỗi khi tách nhạc: {err_msg}'
+                if full_output:
+                    err_msg = " | ".join(full_output[-3:])
+                else:
+                    err_msg = f'No output, return code: {process.returncode} (Có thể do Server bị văng RAM - OOM)'
+                tasks[task_id]['message'] = f'Lỗi: {err_msg}'
 
             # Clean up input file
             try:
