@@ -63,7 +63,11 @@ def get_yt_dlp_cmd():
         ffmpeg_dir = str(Path(FFMPEG_PATH).parent)
         cmd.extend(['--ffmpeg-location', ffmpeg_dir])
     # Bypass YouTube bot detection & enable high resolutions
-    cmd.extend(['--extractor-args', 'youtube:player-client=android;formats=missing_pot'])
+    cmd.extend([
+        '--force-ipv4',
+        '--geo-bypass',
+        '--extractor-args', 'youtube:player-client=web,android;formats=missing_pot'
+    ])
     return cmd
 
 

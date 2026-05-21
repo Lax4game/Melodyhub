@@ -1,6 +1,6 @@
 flask==3.1.1
 flask-cors==5.0.1
-yt-dlp
+yt-dlp @ git+https://github.com/yt-dlp/yt-dlp.git
 pydub==0.25.1
 demucs==4.0.1
 torch
